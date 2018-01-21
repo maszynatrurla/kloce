@@ -56,6 +56,7 @@ public class ActionBar extends JPanel
         
         add(new JSeparator(JSeparator.VERTICAL));
         
+        createButton("Clear", Handler -> clear());
         createButton("Reset", Handler -> reset());
         createButton("Play", Handler -> play());
         createButton("Pause", Handler -> pause());
@@ -177,6 +178,12 @@ public class ActionBar extends JPanel
         {
             load(name);
         }
+    }
+    
+    private void clear()
+    {
+        app.get(CodeView.class).clear();
+        reset();
     }
     
     private void reset()

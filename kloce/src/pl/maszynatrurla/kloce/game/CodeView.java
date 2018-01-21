@@ -1,188 +1,240 @@
 package pl.maszynatrurla.kloce.game;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.event.InputMethodEvent;
-import java.awt.event.InputMethodListener;
+import java.awt.Graphics;
+import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
 
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
+import javax.swing.event.MouseInputAdapter;
 
 import pl.maszynatrurla.kloce.AppGlobals;
+import pl.maszynatrurla.kloce.res.StyleChoices;
 
 public class CodeView extends JPanel implements Executable
 {
     private static final long serialVersionUID = 1L;
     
     private final AppGlobals app;
-    private final Font font = new Font(Font.MONOSPACED, Font.BOLD, 22);
-    private JTextArea textArea;
-    private boolean dirty = true;
-    private int previousPc, previousPos;
+    
+    private final CodeStats stats = new CodeStats();
+    private final CodeViewPositions positions = new CodeViewPositions();
     
     public CodeView(final AppGlobals resources)
     {
         this.app = resources;
+        this.app.set(stats);
     }
     
     public void create()
     {
-        this.setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
+        this.setLayout(new BorderLayout());
         this.setBackground(Color.BLACK);
-        
-        textArea = new JTextArea();
-        textArea.setBorder(BorderFactory.createEmptyBorder(2, 30, 2, 10));
-        textArea.setFont(font);
-        textArea.setPreferredSize(new Dimension(1000, 100));
-        textArea.setEditable(true);
-        textArea.setLineWrap(true);
-        textArea.setWrapStyleWord(true);
-        textArea.setBackground(Color.DARK_GRAY);
-        textArea.setForeground(Color.WHITE);
-        textArea.setCaretColor(Color.WHITE);
-        textArea.setSelectionColor(Color.CYAN);
-        textArea.setSelectedTextColor(Color.MAGENTA);
-        textArea.addInputMethodListener(new InputMethodListener() {
-            
-            @Override
-            public void inputMethodTextChanged(InputMethodEvent event)
-            {
-                dirty = true;
-            }
-            
-            @Override
-            public void caretPositionChanged(InputMethodEvent event)
-            {
-                
-            }
-        });
-        this.add(textArea);
-        
+
+        this.setPreferredSize(new Dimension(3000, 120));
+        MyMouseAdapter mouseHandler = new MyMouseAdapter();
+        this.addMouseListener(mouseHandler);
+        this.addMouseMotionListener(mouseHandler);
+        this.recalculate();
+ 
         Processor processor = app.get(Processor.class);
         processor.load(this);
     }
-
+    
+    public void clear()
+    {
+        recalculate();
+        positions.code.clear();
+        positions.highlightPc = -1;
+        repaint();
+    }
+    
+    private void recalculate()
+    {
+        final short [] toolsInOrder = new short [] {
+                Asm.GO, Asm.LT, Asm.RT, Asm.INC, Asm.AD2, Asm.AD4,
+                Asm.DEC, Asm.JZ, Asm.JNZ, Asm.MUP, Asm.MDN,
+                Asm.IN, Asm.OUT
+        };  
+        
+        positions.setPalette(toolsInOrder);
+    }
+    
     @Override
     public short getCode(int pc) throws OutOfCodeException, InvalidTokenException
     {
-        if (!dirty && previousPc == pc)
+        if (pc < positions.code.size())
         {
-            previousPc = pc;
-            return goToToken(previousPos, 0);
-        }
-        else if (!dirty && previousPc == pc - 1)
-        {
-            previousPc = pc;
-            return goToToken(previousPos, 1);
+            positions.highlightPc = pc;
+            repaint();
+            return positions.code.get(pc);
         }
         else
         {
-            dirty = false;
-            previousPc = pc;
-            
-            return goToToken(0, pc);
-            
+            throw new OutOfCodeException(pc);
         }
     }
     
-    private short goToToken(int start, int num) throws OutOfCodeException, InvalidTokenException
+    @Override
+    public void paint(Graphics g)
     {
-        String text = textArea.getText();
-        int pos = start;
+        super.paint(g);
         
-        try
+        paintPalette(g);
+        paintTrack(g);
+        
+        if (positions.dragged.isOn)
         {
-            for (int i = 0; i < num; ++i)
-            {
-                while (Character.isWhitespace(text.charAt(pos)))
-                {
-                    ++pos;
-                }
-                while (!Character.isWhitespace(text.charAt(pos)))
-                {
-                    ++pos;
-                }
-            }
-            
-            while (Character.isWhitespace(text.charAt(pos)))
-            {
-                ++pos;
-            }
-            
-            previousPos = pos;
-            
-            while (pos < text.length() && !Character.isWhitespace(text.charAt(pos)))
-            {
-                
-                ++pos;
-            }
+            paintOp(positions.dragged.op, g,
+                    positions.dragged.x,
+                    positions.dragged.y, false);
         }
-        catch (StringIndexOutOfBoundsException sioobe)
-        {
-            throw new OutOfCodeException(previousPc);
-        }
+    }
+    
+    private void paintTrack(Graphics g)
+    {
+        Rectangle bnds = g.getClipBounds();
 
+        int xoff = positions.trackBounds.x;
+        positions.trackBounds = new Rectangle(xoff,
+                positions.trackBounds.y, bnds.width - 50, 44);
         
-        textArea.select(previousPos, pos);
+        g.setColor(Color.DARK_GRAY);
+        g.fillRect(positions.trackBounds.x, positions.trackBounds.y,
+                positions.trackBounds.width, positions.trackBounds.height);
+
+        for (int i = 0; i < positions.code.size(); ++i)
+        {
+            paintOp(positions.code.get(i), g, xoff + 42 * i,
+                    positions.trackBounds.y, i == positions.highlightPc);
+        }
+    }
+    
+    private void paintPalette(Graphics g)
+    {
+        int xoff = positions.paletteBounds.x;
         
-        if (text.regionMatches(previousPos, "++", 0, 2))
+        for (int i = 0; i < positions.ops.length; ++i)
         {
-            return (short) 1;
+            paintOp(positions.ops[i], g, xoff + 45 * i, 65, false);
         }
-        else if (text.regionMatches(previousPos, "+2", 0, 2))
+    }
+    
+    private void paintOp(short op, Graphics g, int x, int y, boolean highlight)
+    {
+        if (highlight)
         {
-            return (short) 2;
-        }
-        else if (text.regionMatches(previousPos, "--", 0, 2))
-        {
-            return (short) 3;
-        }
-        else if (text.regionMatches(previousPos, "+4", 0, 2))
-        {
-            return (short) 4;
-        }
-        else if (text.regionMatches(previousPos, "m+", 0, 2))
-        {
-            return (short) 5;
-        }
-        else if (text.regionMatches(previousPos, "m-", 0, 2))
-        {
-            return (short) 6;
-        }
-        else if (text.regionMatches(previousPos, "in", 0, 2))
-        {
-            return (short) 7;   
-        }
-        else if (text.regionMatches(previousPos, "out", 0, 3))
-        {
-            return (short) 8;
-        }
-        else if (text.regionMatches(previousPos, "[", 0, 1))
-        {
-            return (short) 9;
-        }
-        else if (text.regionMatches(previousPos, "]", 0, 1))
-        {
-            return (short) 10;
-        }
-        else if (text.regionMatches(previousPos, "go", 0, 2))
-        {
-            return (short) 11;
-        }
-        else if (text.regionMatches(previousPos, "lt", 0, 2))
-        {
-            return (short) 12;
-        }
-        else if (text.regionMatches(previousPos, "rt", 0, 2))
-        {
-            return (short) 13;
+            g.setColor(Color.BLACK);
         }
         else
         {
-            throw new InvalidTokenException(text.substring(previousPos, pos));
+            switch (op)
+            {
+            case Asm.INC: 
+            case Asm.AD2: 
+            case Asm.DEC: 
+            case Asm.AD4:
+                g.setColor(new Color(155, 255, 112));
+                break;
+            case Asm.MUP: 
+            case Asm.MDN:
+                g.setColor(Color.YELLOW);
+                break;
+            case Asm.IN : 
+            case Asm.OUT: 
+                g.setColor(new Color(255, 99, 99));
+                break;
+            case Asm.JZ : 
+            case Asm.JNZ:
+                g.setColor(new Color(255, 112, 207));
+                break;
+            case Asm.GO : 
+            case Asm.LT : 
+            case Asm.RT :
+                g.setColor(new Color(112, 166, 255));
+                break;
+            }
+        }
+
+        g.fillRoundRect(x, y, 40, 40, 6, 6);
+        g.setColor(Color.WHITE);
+        g.drawRoundRect(x, y, 40, 40, 6, 6);
+        
+        if (highlight)
+        {
+            g.setColor(Color.WHITE);
+            g.setFont(StyleChoices.CODE_BLOCK_H_FONT);
+        }
+        else
+        {
+            g.setColor(Color.BLACK);
+            g.setFont(StyleChoices.CODE_BLOCK_FONT);   
+        }
+        
+        switch (op)
+        {
+        case Asm.INC: g.drawString("+1" , x + 6,  y + 27); break;
+        case Asm.AD2: g.drawString("+2" , x + 6,  y + 27); break;
+        case Asm.DEC: g.drawString("-1" , x + 6,  y + 27); break;
+        case Asm.AD4: g.drawString("+4" , x + 6,  y + 27); break;
+        case Asm.MUP: g.drawString("M>" , x + 6,  y + 27); break;
+        case Asm.MDN: g.drawString("<M" , x + 6,  y + 27); break;
+        case Asm.IN : g.drawString("in" , x + 9,  y + 27); break;
+        case Asm.OUT: g.drawString("out", x + 4,  y + 27); break;
+        case Asm.JZ : g.drawString("["  , x + 14, y + 27); break;
+        case Asm.JNZ: g.drawString("]"  , x + 14, y + 27); break;
+        case Asm.GO : g.drawString("go" , x + 6,  y + 27); break;
+        case Asm.LT : g.drawString("lt" , x + 10, y + 27); break;
+        case Asm.RT : g.drawString("rt" , x + 10, y + 27); break;
+        }
+    }
+
+    private class MyMouseAdapter extends MouseInputAdapter
+    {
+        private int dragState = 0;
+        
+        @Override
+        public void mousePressed(MouseEvent e)
+        {
+            if (0 == dragState)
+            {
+                if (positions.setPaletteDragOn(e.getX(), e.getY()))
+                {
+                    dragState = 1;
+                }
+                else if (positions.setTrackDragOn(e.getX(), e.getY()))
+                {
+                    dragState = 2;
+                }
+            }
+        }
+
+        @Override
+        public void mouseDragged(MouseEvent e)
+        {
+            if (dragState > 0)
+            {
+                positions.drag(e.getX(), e.getY());
+                repaint();
+            }
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e)
+        {
+            if (1 == dragState)
+            {
+                positions.setPaletteDragOff(e.getX(), e.getY());
+                repaint();
+            }
+            else if (2 == dragState)
+            {
+                positions.setTrackDragOff(e.getX(), e.getY());
+                repaint();
+            }
+            dragState = 0;
         }
     }
 }

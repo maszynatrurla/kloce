@@ -1,0 +1,40 @@
+01_ruchy.kloc
+
+go go rt go lt go
+
+
+
+02_petle.kloc
+
++1 [ go go rt go lt ]        # using neverending loop
+
++4 +2 [ -1 go go rt go lt ]  # without neverending loop
+
+
+
+03_petlawpetli.kloc
+
++1 [ m+ +4 +4 [ -1 go ] m- rt ]     # using neverending loop
+
++4 [ -1 m+ +4 +4 [ -1 go ] m- rt ]  # without neverending loop
+
+
+
+04_window.kloc
+
++1 [ m+ +4 [ -1 go go go go rt ] rt m- ]
+
+
+
+05_rombus.kloc
+
+go +1 [ m+ +4 [ -1 go rt go lt ] rt m- ]
+
+
+
+06_spirala.kloc
+
++1 [ [ -1 m+ +1 m- go ] rt m+ +1 ]
+
+
+

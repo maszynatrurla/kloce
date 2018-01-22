@@ -30,6 +30,7 @@ public class EditorWindow
         globals.set(actionBar);
         globals.set(canvas);
         globals.set(palette);
+        globals.set(new CommandStack());
         
         actionBar.create();
         canvas.create();

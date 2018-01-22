@@ -6,10 +6,12 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 
+import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 
 import pl.maszynatrurla.kloce.AppGlobals;
 import pl.maszynatrurla.kloce.Image;
@@ -67,16 +69,76 @@ public class ActionBar extends JPanel
         add(button);
         
         button = new JButton("Save");
-        button.addActionListener(new ActionListener() {
+        ActionListener saveListener = new ActionListener() {
             
             @Override
             public void actionPerformed(ActionEvent e)
             {
                 doSave();
             }
+        };
+        button.addActionListener(saveListener);
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("control S"),
+                "Save");
+        getActionMap().put("Save", new AbstractAction() {
+            
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                saveListener.actionPerformed(e);
+            }
         });
         add(button);
         
+        button = new JButton("Undo");
+        ActionListener undoListener = new ActionListener() {
+            
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                doUndo();
+            }
+        };
+        button.addActionListener(undoListener);
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("control Z"),
+                "Undo");
+        getActionMap().put("Undo", new AbstractAction() {
+            
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                undoListener.actionPerformed(e);
+            }
+        });
+        add(button);
+        
+        button = new JButton("Redo");
+        ActionListener redoListener = new ActionListener() {
+            
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                doRedo();
+            }
+        };
+        button.addActionListener(redoListener);
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("control Y"),
+                "Redo");
+        getActionMap().put("Redo", new AbstractAction() {
+            
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                redoListener.actionPerformed(e);
+            }
+        });
+        add(button);
     }
     
     private void doNew()
@@ -84,6 +146,7 @@ public class ActionBar extends JPanel
         Image image = app.get(Image.class);
         image.zero();
         Canvas canvas = app.get(Canvas.class);
+        app.get(CommandStack.class).clear();
         canvas.repaint();
     }
     
@@ -98,6 +161,7 @@ public class ActionBar extends JPanel
                 File selected = dialog.getSelectedFile();
                 Image image = Image.load(selected);
                 app.set(image);
+                app.get(CommandStack.class).clear();
                 app.get(Canvas.class).repaint();
                 this.saveFile = dialog.getSelectedFile().getAbsolutePath();
                 cd = selected.getParent();
@@ -121,6 +185,7 @@ public class ActionBar extends JPanel
             try
             {
                 image.store(new File(saveFile));
+                app.get(CommandStack.class).clear();
             }
             catch (IOException ioe)
             {
@@ -146,5 +211,17 @@ public class ActionBar extends JPanel
             cd = selected.getParent();
         }
         
+    }
+    
+    private void doUndo()
+    {
+        app.get(CommandStack.class).undo();
+        app.get(Canvas.class).repaint();
+    }
+    
+    private void doRedo()
+    {
+        app.get(CommandStack.class).redo();
+        app.get(Canvas.class).repaint();
     }
 }

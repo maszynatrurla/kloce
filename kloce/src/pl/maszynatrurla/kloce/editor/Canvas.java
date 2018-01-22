@@ -66,20 +66,24 @@ public class Canvas extends JPanel
                 switch (image.getTile(x, y))
                 {
                 case ROBOT_BACK:
-                    image.setTile(x, y, Tile.ROBOT_RIGHT);
+                    app.get(CommandStack.class).performJoinableCommand(
+                            new ChangeTileCommand(image, x, y, Tile.ROBOT_RIGHT));
                     changed = true;
                     break;
                 case ROBOT_FRONT:
-                    image.setTile(x, y, Tile.ROBOT_LEFT);
+                    app.get(CommandStack.class).performJoinableCommand(
+                            new ChangeTileCommand(image, x, y, Tile.ROBOT_LEFT));
                     changed = true;
                     break;
                 case ROBOT_LEFT:
-                    image.setTile(x, y, Tile.ROBOT_BACK);
+                    app.get(CommandStack.class).performJoinableCommand(
+                            new ChangeTileCommand(image, x, y, Tile.ROBOT_BACK));
                     changed = true;
                     break;
                 case START:
                 case ROBOT_RIGHT:
-                    image.setTile(x, y, Tile.ROBOT_FRONT);
+                    app.get(CommandStack.class).performJoinableCommand(
+                            new ChangeTileCommand(image, x, y, Tile.ROBOT_FRONT));
                     changed = true;
                     break;
                 default:
@@ -296,11 +300,11 @@ public class Canvas extends JPanel
             
             trimwin = new Rectangle(startX, startY, endX - startX, endY - startY);
             
-            app.get(Image.class).trim(
+            app.get(CommandStack.class).performCommand(new TrimImageCommand(
+                    image, 
                     trimwin.x, trimwin.y,
                     trimwin.x + trimwin.width,
-                    trimwin.y + trimwin.height);
-
+                    trimwin.y + trimwin.height));
         }
         
         trimState = 1;
@@ -319,7 +323,8 @@ public class Canvas extends JPanel
         {
             if (image.getTile(tileXY.x, tileXY.y) != tool)
             {
-                image.setTile(tileXY.x, tileXY.y, tool);
+                app.get(CommandStack.class).performJoinableCommand(
+                        new ChangeTileCommand(image, tileXY.x, tileXY.y, tool));
                 this.repaint();
             }
         }

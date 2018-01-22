@@ -220,7 +220,10 @@ public class Image
         {
             if (startPos >= 0 && startPos < image.length)
             {
-                image[startPos] = Tile.PLATFORM;
+                if (START_TILES.contains(image[startPos]))
+                {
+                    image[startPos] = Tile.PLATFORM;
+                }
             }
             startPos = xlen * y + x;
         }

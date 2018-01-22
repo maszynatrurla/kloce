@@ -5,9 +5,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Vector;
 
+import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
+import javax.swing.KeyStroke;
 
 import pl.maszynatrurla.kloce.AppGlobals;
 import pl.maszynatrurla.kloce.Image;
@@ -32,25 +34,39 @@ public class Palette extends JPanel
     {
         setLayout(new FlowLayout(FlowLayout.LEFT));
         
-        createToggle("Start", Tile.ROBOT_RIGHT);
-        createToggle("Platform", Tile.PLATFORM);
-        createToggle("Battery", Tile.BATTERY);
-        createToggle("Eraser", Tile.EMPTY);
+        createToggle("Start", Tile.ROBOT_RIGHT, KeyStroke.getKeyStroke("typed s"));
+        createToggle("Platform", Tile.PLATFORM, KeyStroke.getKeyStroke("typed p"));
+        createToggle("Battery", Tile.BATTERY, KeyStroke.getKeyStroke("typed b"));
+        createToggle("Eraser", Tile.EMPTY, KeyStroke.getKeyStroke("DELETE"));
         createRotateButton();
-        createToggle("Trim", null);
+        createToggle("Trim", null, KeyStroke.getKeyStroke("control T"));
        
         
         JButton button = new JButton("Extend");
-        button.addActionListener(new ActionListener() {
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(
+                KeyStroke.getKeyStroke("typed x"), "Extend");
+        ActionListener listener = new ActionListener() {
             
             @Override
             public void actionPerformed(ActionEvent e)
             {
                 doExtend();
             }
+        };
+        button.addActionListener(listener);
+        getActionMap().put("Extend", new AbstractAction() {
+            
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                listener.actionPerformed(e);
+            }
         });
         add(button);
     }
+    
     
     private void createRotateButton()
     {
@@ -66,10 +82,12 @@ public class Palette extends JPanel
         add(button);
     }
     
-    private void createToggle(String text, Tile tool)
+    private void createToggle(String text, Tile tool, KeyStroke shortcut)
     {
         JToggleButton toggle = new JToggleButton(text);
-        toggle.addActionListener(new ActionListener() {
+        this.getInputMap(WHEN_IN_FOCUSED_WINDOW).put(
+                shortcut, text);
+        ActionListener listener = new ActionListener() {
             
             @Override
             public void actionPerformed(ActionEvent e)
@@ -104,6 +122,17 @@ public class Palette extends JPanel
                     }
                 }
             }
+        };
+        toggle.addActionListener(listener);
+        getActionMap().put(text, new AbstractAction() {
+            
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                toggle.doClick();
+            }
         });
         toggles.add(toggle);
         add(toggle);
@@ -124,7 +153,7 @@ public class Palette extends JPanel
         Image image = app.get(Image.class);
         if (image.getHeight() < 48 && image.getLength() < 48)
         {
-            image.extend();
+            app.get(CommandStack.class).performCommand(new ExtendImageCommand(image));
             app.get(Canvas.class).repaint();
         }
     }

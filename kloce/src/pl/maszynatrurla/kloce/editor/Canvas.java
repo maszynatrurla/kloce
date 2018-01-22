@@ -2,6 +2,7 @@ package pl.maszynatrurla.kloce.editor;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -21,7 +22,8 @@ public class Canvas extends JPanel
     
     private Tile tool;
     private int trimState = 0;
-    private int trimx, trimy;
+    private Point trimstart;
+    private Rectangle trimwin;
 
     public Canvas(final AppGlobals resources)
     {
@@ -215,7 +217,7 @@ public class Canvas extends JPanel
                     break;
                 
                 }
-                if (trimState > 0 && trimx == xidx && trimy == yidx)
+                if (trimState > 1 && trimwin.contains(xidx, yidx))
                 {
                     g.setColor(Color.RED);
                     g.drawRect(xoff + xidx * tilesize, yoff + yidx * tilesize, tilesize, tilesize);
@@ -224,13 +226,8 @@ public class Canvas extends JPanel
         }
     }
     
-    private void editTile(int mousex, int mousey)
+    private Point getMousedTile(Image image, int mousex, int mousey)
     {
-        if (trimState == 0 && tool == null)
-        {
-            return;
-        }
-        Image image = app.get(Image.class);
         Rectangle screen = this.getBounds();
         
         int tilesize = (screen.width - 2) / image.getLength();
@@ -248,29 +245,81 @@ public class Canvas extends JPanel
         if (tilex >= 0 && tiley >= 0 && tilex < image.getLength()
                 && tiley < image.getHeight())
         {
-            if (trimState == 1)
+            return new Point(tilex, tiley);
+        }
+        return null;
+    }
+    
+    private void initTrim(int mousex, int mousey)
+    {
+        Image image = app.get(Image.class);
+        Point tileXY = getMousedTile(image, mousex, mousey);
+        
+        if (tileXY != null)
+        {
+            trimstart = new Point(tileXY.x, tileXY.y);
+            trimwin = new Rectangle(tileXY.x, tileXY.y, 1, 1);
+            trimState = 2;
+            this.repaint();
+        }
+    }
+    
+    private void addTrim(int mousex, int mousey)
+    {
+        Image image = app.get(Image.class);
+        Point tileXY = getMousedTile(image, mousex, mousey);
+        
+        if (tileXY != null && trimwin != null && !trimwin.contains(tileXY))
+        {
+            int startX = tileXY.x > trimstart.x ? trimstart.x : tileXY.x;
+            int startY = tileXY.y > trimstart.y ? trimstart.y : tileXY.y;
+            int endX = tileXY.x > trimstart.x ? tileXY.x : trimstart.x;
+            int endY = tileXY.y > trimstart.y ? tileXY.y : trimstart.y;
+            
+            trimwin = new Rectangle(startX, startY, endX - startX, endY - startY);
+            
+            this.repaint();
+        }
+    }
+    
+    private void commitTrim(int mousex, int mousey)
+    {
+        Image image = app.get(Image.class);
+        Point tileXY = getMousedTile(image, mousex, mousey);
+        
+        if (tileXY != null && trimwin != null)
+        {
+            int startX = tileXY.x > trimstart.x ? trimstart.x : tileXY.x;
+            int startY = tileXY.y > trimstart.y ? trimstart.y : tileXY.y;
+            int endX = tileXY.x > trimstart.x ? tileXY.x : trimstart.x;
+            int endY = tileXY.y > trimstart.y ? tileXY.y : trimstart.y;
+            
+            trimwin = new Rectangle(startX, startY, endX - startX, endY - startY);
+            
+            app.get(Image.class).trim(
+                    trimwin.x, trimwin.y,
+                    trimwin.x + trimwin.width,
+                    trimwin.y + trimwin.height);
+
+        }
+        
+        trimState = 1;
+        trimwin = null;
+        trimstart = null;
+        
+        this.repaint();
+    }
+    
+    private void editTile(int mousex, int mousey)
+    {
+        Image image = app.get(Image.class);
+        Point tileXY = getMousedTile(image, mousex, mousey);
+
+        if (tileXY != null && tool != null)
+        {
+            if (image.getTile(tileXY.x, tileXY.y) != tool)
             {
-                trimx = tilex;
-                trimy = tiley;
-                trimState = 2;
-                this.repaint();
-            }
-            else if (trimState == 2)
-            {
-                image.trim(trimx, trimy, tilex, tiley);
-                trimState = 0;
-                this.repaint();
-            }
-            else if (tool != null)
-            {
-                if (image.getTile(tilex, tiley) == tool)
-                {
-                    image.setTile(tilex, tiley, Tile.EMPTY);
-                }
-                else
-                {
-                    image.setTile(tilex, tiley, tool);
-                }
+                image.setTile(tileXY.x, tileXY.y, tool);
                 this.repaint();
             }
         }
@@ -281,8 +330,36 @@ public class Canvas extends JPanel
         @Override
         public void mousePressed(MouseEvent e)
         {
-            editTile(e.getX(), e.getY());
+            if (trimState > 0)
+            {
+                initTrim(e.getX(), e.getY());
+            }
+            else if (tool != null)
+            {
+                editTile(e.getX(), e.getY());
+            }
         }
         
+        @Override
+        public void mouseDragged(MouseEvent e)
+        {
+            if (trimState > 0)
+            {
+                addTrim(e.getX(), e.getY());
+            }
+            else if (tool != null)
+            {
+                editTile(e.getX(), e.getY());
+            }
+        }
+        
+        @Override
+        public void mouseReleased(MouseEvent e)
+        {
+            if (trimState > 1)
+            {
+                commitTrim(e.getX(), e.getY());
+            }
+        }
     }
 }

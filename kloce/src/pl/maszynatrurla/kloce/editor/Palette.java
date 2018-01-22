@@ -35,9 +35,6 @@ public class Palette extends JPanel
         createToggle("Start", Tile.ROBOT_RIGHT);
         createToggle("Platform", Tile.PLATFORM);
         createToggle("Battery", Tile.BATTERY);
-        createToggle("InA", Tile.INPUT_A);
-        createToggle("InB", Tile.INPUT_B);
-        createToggle("Out", Tile.OUTPUT);
         createToggle("Eraser", Tile.EMPTY);
         createRotateButton();
         createToggle("Trim", null);

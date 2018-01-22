@@ -5,10 +5,15 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.Vector;
 
 public class Image
 {
+    
+    private static final EnumSet<Tile> START_TILES = EnumSet.of(
+            Tile.START, Tile.ROBOT_BACK, Tile.ROBOT_FRONT,
+            Tile.ROBOT_LEFT, Tile.ROBOT_RIGHT);
     
     public static Image load(File inputFile) throws IOException
     {
@@ -126,6 +131,8 @@ public class Image
     
     private Tile image [];
     
+    private int startPos = -1;
+    
     public Image(int xlen, int ylen)
     {
         this.xlen = xlen;
@@ -208,6 +215,15 @@ public class Image
     public void setTile(int x, int y, Tile tile)
     {
         this.image[xlen * y + x] = tile;
+        
+        if (START_TILES.contains(tile))
+        {
+            if (startPos >= 0 && startPos < image.length)
+            {
+                image[startPos] = Tile.PLATFORM;
+            }
+            startPos = xlen * y + x;
+        }
     }
     
     public Tile getTile(int x, int y)
@@ -222,6 +238,7 @@ public class Image
             this.image[idx] = Tile.EMPTY;
         }
         
+        startPos = -1;
     }
     
     public void extend()
@@ -249,6 +266,11 @@ public class Image
             newImage[(yidx + 1) * xlen + xlen - 1] = Tile.EMPTY;
         }
         
+        if (startPos >= 0)
+        {
+            int prevxlen = xlen - 2;
+            startPos += xlen + 2 * (startPos / prevxlen) + 1;
+        }
         
         this.image = newImage;
     }
@@ -287,5 +309,18 @@ public class Image
         image = newimage;
         xlen = newxlen;
         ylen = newylen;
+        
+        if (startPos >= 0)
+        {
+            for (int i = 0; i < image.length; ++i)
+            {
+                if (START_TILES.contains(image[i]))
+                {
+                    startPos = i;
+                    break;
+                }
+            }
+        }
     }
+
 }

@@ -303,8 +303,8 @@ public class Canvas extends JPanel
             app.get(CommandStack.class).performCommand(new TrimImageCommand(
                     image, 
                     trimwin.x, trimwin.y,
-                    trimwin.x + trimwin.width,
-                    trimwin.y + trimwin.height));
+                    trimwin.x + trimwin.width - 1,
+                    trimwin.y + trimwin.height - 1));
         }
         
         trimState = 1;
@@ -323,8 +323,16 @@ public class Canvas extends JPanel
         {
             if (image.getTile(tileXY.x, tileXY.y) != tool)
             {
-                app.get(CommandStack.class).performJoinableCommand(
-                        new ChangeTileCommand(image, tileXY.x, tileXY.y, tool));
+                if (tool.isStartTile())
+                {
+                    app.get(CommandStack.class).performCommand(
+                            new ChangeStartTileCommand(image, tileXY.x, tileXY.y, tool));
+                }
+                else
+                {
+                    app.get(CommandStack.class).performJoinableCommand(
+                            new ChangeTileCommand(image, tileXY.x, tileXY.y, tool));
+                }
                 this.repaint();
             }
         }

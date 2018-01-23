@@ -1,12 +1,12 @@
 package pl.maszynatrurla.kloce.editor;
 
+import pl.maszynatrurla.kloce.AppGlobals;
 import pl.maszynatrurla.kloce.Image;
 import pl.maszynatrurla.kloce.Tile;
 
 public class ChangeTileCommand implements Command
 {
     
-    private final Image image;
     private final int x;
     private final int y;
     private Tile oldTile;
@@ -14,7 +14,6 @@ public class ChangeTileCommand implements Command
     
     public ChangeTileCommand(Image image, int x, int y, Tile newTile)
     {
-        this.image = image;
         this.x = x;
         this.y = y;
         this.oldTile = image.getTile(x, y);
@@ -24,7 +23,7 @@ public class ChangeTileCommand implements Command
     @Override
     public void perform()
     {
-        image.setTile(x, y, newTile);
+        AppGlobals.getInstance().get(Image.class).setTile(x, y, newTile);
     }
 
     @Override

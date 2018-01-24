@@ -5,23 +5,13 @@ import pl.maszynatrurla.kloce.Image;
 
 public class TrimImageCommand implements Command
 {
-    private final Image backupImage;
-    private Image doImage;
+    private Image backupImage;
     private boolean doUndo = false;
     private final int startX, startY, endX, endY;
     
-    public TrimImageCommand(Image image, int startX, int startY,
+    public TrimImageCommand(int startX, int startY,
             int endX, int endY)
     {
-        this.backupImage = new Image(image.getLength(), image.getHeight());
-        for (int i = 0; i < image.getHeight(); ++i)
-        {
-            for (int j = 0; j < image.getLength(); ++j)
-            {
-                this.backupImage.setTile(j, i, image.getTile(j, i));
-            }
-        }
-        doImage = image;
         this.startX = startX;
         this.startY = startY;
         this.endX = endX;
@@ -32,15 +22,17 @@ public class TrimImageCommand implements Command
     @Override
     public void perform()
     {
+        AppGlobals app = AppGlobals.getInstance();
+        
         if (doUndo)
         {
-            doImage = backupImage;
-            AppGlobals.getInstance().set(doImage);
+            app.set(backupImage);
         }
         else
         {
-            doImage.trim(startX, startY, endX, endY);
-            AppGlobals.getInstance().set(doImage);
+            Image image = app.get(Image.class);
+            backupImage = new Image(image);
+            image.trim(startX, startY, endX, endY);
         }
     }
 

@@ -12,10 +12,11 @@ public enum Asm
     public static final short MUP = 5;
     public static final short MDN = 6;
     public static final short IN  = 7;
-    public static final short OUT = 8;
-    public static final short JZ  = 9;
-    public static final short JNZ = 10;
-    public static final short GO  = 11;
-    public static final short LT  = 12;
-    public static final short RT  = 13;
+    public static final short AD8 = 8;
+    public static final short OUT = 9;
+    public static final short JZ  = 10;
+    public static final short JNZ = 11;
+    public static final short GO  = 12;
+    public static final short LT  = 13;
+    public static final short RT  = 14;
 }

@@ -273,14 +273,14 @@ public class Canvas extends JPanel
         Image image = app.get(Image.class);
         Point tileXY = getMousedTile(image, mousex, mousey);
         
-        if (tileXY != null && trimwin != null && !trimwin.contains(tileXY))
+        if (tileXY != null && trimwin != null)
         {
             int startX = tileXY.x > trimstart.x ? trimstart.x : tileXY.x;
             int startY = tileXY.y > trimstart.y ? trimstart.y : tileXY.y;
             int endX = tileXY.x > trimstart.x ? tileXY.x : trimstart.x;
             int endY = tileXY.y > trimstart.y ? tileXY.y : trimstart.y;
             
-            trimwin = new Rectangle(startX, startY, endX - startX, endY - startY);
+            trimwin = new Rectangle(startX, startY, endX - startX + 1, endY - startY + 1);
             
             this.repaint();
         }
@@ -301,10 +301,9 @@ public class Canvas extends JPanel
             trimwin = new Rectangle(startX, startY, endX - startX, endY - startY);
             
             app.get(CommandStack.class).performCommand(new TrimImageCommand(
-                    image, 
                     trimwin.x, trimwin.y,
-                    trimwin.x + trimwin.width - 1,
-                    trimwin.y + trimwin.height - 1));
+                    trimwin.x + trimwin.width,
+                    trimwin.y + trimwin.height));
         }
         
         trimState = 1;

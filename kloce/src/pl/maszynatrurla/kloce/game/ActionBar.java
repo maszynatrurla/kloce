@@ -234,7 +234,7 @@ public class ActionBar extends JPanel
         } 
         catch (CpuTrap e)
         {
-            app.get(Canvas.class).setMessage(e.toString());
+            app.get(Canvas.class).setMessage(e.getMessage());
         }
     }
     
@@ -323,8 +323,8 @@ public class ActionBar extends JPanel
     
     private void createSpeedCtrl()
     {
-        JSlider slider = new JSlider(JSlider.HORIZONTAL, 0, 2000, 1500);
-        slider.setPreferredSize(new Dimension(300, 40));
+        JSlider slider = new JSlider(JSlider.HORIZONTAL, 0, 2000, 1280);
+        slider.setPreferredSize(new Dimension(250, 40));
         slider.addChangeListener(new ChangeListener() {
             
             @Override
@@ -333,12 +333,17 @@ public class ActionBar extends JPanel
                 int value = slider.getValue();
                 if (value <= 1000)
                 {
-                    delayMs = 5000 - 4 * value;
+                    delayMs = 3000 - 2 * value;
+                }
+                else if (value <= 1500)
+                {
+                    value -= 1001;
+                    delayMs = 1000 - (int) (900. * ((double) value / 500.));
                 }
                 else
                 {
-                    value -= 1001;
-                    delayMs = 1000 - value;
+                    value -= 1501;
+                    delayMs = 100 - (int) (100. * ((double) value) / 500.);
                 }
                 if (player != null)
                 {
@@ -396,7 +401,7 @@ public class ActionBar extends JPanel
             } 
             catch (CpuTrap cte)
             {
-                canvas.setMessage(cte.toString());
+                canvas.setMessage(cte.getMessage());
             }
         }
     }

@@ -28,6 +28,7 @@ public class CommandStack
                 }
             }
         }
+        redoStack.clear();
         cmd.perform();
         cmd.invert();
         undoStack.push(cmd);
@@ -35,6 +36,7 @@ public class CommandStack
     
     public void performJoinableCommand(Command cmd)
     {
+        redoStack.clear();
         cmd.perform();
         cmd.invert();
         synchronized (joined)

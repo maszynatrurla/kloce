@@ -54,6 +54,9 @@ public class Processor
             case Asm.AD4 :
                 setMemory(ptr, (short) 4);
                 break;
+            case Asm.AD8 :
+                setMemory(ptr, (short) 8);
+                break;
             case Asm.MUP :
                 incPtr();
                 break;
@@ -142,7 +145,7 @@ public class Processor
         } 
         catch (RobotObjectiveAccomplishedEvent roae)
         {
-            throw new CodeEndedTrap(getState());
+            throw new CodeEndedTrap(getState(), "Objective accomplished! :)");
         }
     }
     

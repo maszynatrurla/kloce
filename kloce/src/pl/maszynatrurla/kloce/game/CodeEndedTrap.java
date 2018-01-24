@@ -9,5 +9,10 @@ public class CodeEndedTrap extends CpuTrap
     {
         super(snapshot, "END");
     }
+    
+    public CodeEndedTrap(CpuSnapshot snapshot, String message)
+    {
+        super(snapshot, message);
+    }
 
 }

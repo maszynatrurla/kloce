@@ -55,7 +55,7 @@ public class CodeView extends JPanel implements Executable
     {
         final short [] toolsInOrder = new short [] {
                 Asm.GO, Asm.LT, Asm.RT, Asm.INC, Asm.AD2, Asm.AD4,
-                Asm.DEC, Asm.JZ, Asm.JNZ, Asm.MUP, Asm.MDN,
+                Asm.AD8, Asm.DEC, Asm.JZ, Asm.JNZ, Asm.MUP, Asm.MDN,
                 Asm.IN, Asm.OUT
         };  
         
@@ -136,6 +136,7 @@ public class CodeView extends JPanel implements Executable
             case Asm.AD2: 
             case Asm.DEC: 
             case Asm.AD4:
+            case Asm.AD8:
                 g.setColor(new Color(155, 255, 112));
                 break;
             case Asm.MUP: 
@@ -179,6 +180,7 @@ public class CodeView extends JPanel implements Executable
         case Asm.AD2: g.drawString("+2" , x + 6,  y + 27); break;
         case Asm.DEC: g.drawString("-1" , x + 6,  y + 27); break;
         case Asm.AD4: g.drawString("+4" , x + 6,  y + 27); break;
+        case Asm.AD8: g.drawString("+8" , x + 6,  y + 27); break;
         case Asm.MUP: g.drawString("M>" , x + 6,  y + 27); break;
         case Asm.MDN: g.drawString("<M" , x + 6,  y + 27); break;
         case Asm.IN : g.drawString("in" , x + 9,  y + 27); break;

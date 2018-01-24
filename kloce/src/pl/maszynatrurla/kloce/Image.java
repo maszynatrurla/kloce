@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Vector;
 
 public class Image
@@ -133,6 +134,13 @@ public class Image
         
         this.image = new Tile [xlen * ylen];
         zero();
+    }
+    
+    public Image(Image other)
+    {
+        this.xlen = other.xlen;
+        this.ylen = other.ylen;
+        this.image = Arrays.copyOf(other.image, other.image.length);
     }
     
     public void store(File outputFile) throws IOException

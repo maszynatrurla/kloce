@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 
 import javax.swing.AbstractAction;
+import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -33,6 +34,8 @@ public class ActionBar extends JPanel
     
     public void create()
     {
+        InputMap inputMap = getInputMap(WHEN_IN_FOCUSED_WINDOW);
+        
         setLayout(new FlowLayout(FlowLayout.LEFT));
         
         JButton button = new JButton("New");
@@ -78,7 +81,7 @@ public class ActionBar extends JPanel
             }
         };
         button.addActionListener(saveListener);
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("control S"),
+        inputMap.put(KeyStroke.getKeyStroke("control S"),
                 "Save");
         getActionMap().put("Save", new AbstractAction() {
             
@@ -102,7 +105,7 @@ public class ActionBar extends JPanel
             }
         };
         button.addActionListener(undoListener);
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("control Z"),
+        inputMap.put(KeyStroke.getKeyStroke("control Z"),
                 "Undo");
         getActionMap().put("Undo", new AbstractAction() {
             
@@ -126,7 +129,7 @@ public class ActionBar extends JPanel
             }
         };
         button.addActionListener(redoListener);
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("control Y"),
+        inputMap.put(KeyStroke.getKeyStroke("control Y"),
                 "Redo");
         getActionMap().put("Redo", new AbstractAction() {
             
@@ -139,6 +142,27 @@ public class ActionBar extends JPanel
             }
         });
         add(button);
+        
+        inputMap.put(KeyStroke.getKeyStroke("control I"), "Invert");
+        getActionMap().put("Invert", new AbstractAction() {
+            
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                doInvert();
+            }
+        });
+    }
+    
+    private void doInvert()
+    {
+        Image image = app.get(Image.class);
+        image.invert();
+        Canvas canvas = app.get(Canvas.class);
+        app.get(CommandStack.class).clear();
+        canvas.repaint();
     }
     
     private void doNew()

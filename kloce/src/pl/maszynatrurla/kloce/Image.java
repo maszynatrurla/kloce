@@ -295,5 +295,20 @@ public class Image
         ylen = newylen;
         
     }
+    
+    public void invert()
+    {
+        for (int idx = 0; idx < image.length; ++idx)
+        {
+            if (Tile.EMPTY == image[idx])
+            {
+                image[idx] = Tile.PLATFORM;
+            }
+            else if (Tile.PLATFORM == image[idx])
+            {
+                image[idx] = Tile.EMPTY;
+            }
+        }
+    }
 
 }

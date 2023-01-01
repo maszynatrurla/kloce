@@ -49,3 +49,18 @@ go +1 [ m+ +4 [ -1 go rt go lt ] rt m- ]
 +1 [ [ -1 m+ +1 m+ +1 m- m- go ] m+ [ -1 m+ +1 m- ] m+ rt ]
 
 
+
+
+
+Other stuff
+
+1. Addition
+
+in m+ in [ -1 m- +1 m+ ] m- out
+
+
+2. Multiplication
+
+in m+ in [ -1 m- [ -1 m+ m+ +1 m+ +1 m- m- m- ] m- [ -1 m+ m+ m+ +1 m- m- m- ] m+ m+ [ -1 m+ m+ m+ +1 m- m- m- ] m+ m+ m+ ] m- m- out
+
+
